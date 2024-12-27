@@ -1,0 +1,12 @@
+[Unit]
+Description=bthomed Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/bthomed
+Environment="RUST_LOG=info"
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
