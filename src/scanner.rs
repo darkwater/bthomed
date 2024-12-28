@@ -9,7 +9,7 @@ use btleplug::{
 use futures::StreamExt;
 use tokio::sync::RwLock;
 
-use crate::Registry;
+use crate::registry::{Device, Registry};
 
 pub async fn scan(registry: Arc<RwLock<Registry>>) -> anyhow::Result<()> {
     let manager = Manager::new().await?;
@@ -46,14 +46,17 @@ pub async fn scan(registry: Arc<RwLock<Registry>>) -> anyhow::Result<()> {
                 log::trace!("{name} {objects:?}");
 
                 let mut registry = registry.write().await;
-                let device = registry.devices.entry(name.clone()).or_default();
+                let device = registry
+                    .devices
+                    .entry(name.clone())
+                    .or_insert_with(Device::new);
 
                 for object in objects {
-                    device.stats.insert(object.name, object.value);
+                    device.update(object.name, object.value);
                 }
 
                 if let Some(rssi) = properties.rssi {
-                    device.stats.insert("rssi", rssi as f32);
+                    device.update("rssi", rssi as f32);
                 }
 
                 log::debug!("{:#?}", registry);
